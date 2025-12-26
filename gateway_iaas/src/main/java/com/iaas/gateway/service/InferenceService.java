@@ -14,14 +14,14 @@ public class InferenceService {
         this.registry = registry;
     }
 
-    public InferenceResponse procesarSolicitud(InferenceRequest request) {
-        InferenceProvider proveedor = registry.seleccionarProveedor()
-                .orElseThrow(() -> new IllegalStateException("No hay proveedores registrados"));
+    public InferenceResponse processRequest(InferenceRequest request) {
+        InferenceProvider provider = registry.selectProvider()
+                .orElseThrow(() -> new IllegalStateException("No providers registered"));
 
-        String contenido = "[Mock] " + request.prompt();
+        String content = "[Mock] " + request.prompt();
         if (request.metadata() != null && !request.metadata().isBlank()) {
-            contenido += " (metadata: " + request.metadata() + ")";
+            content += " (metadata: " + request.metadata() + ")";
         }
-        return new InferenceResponse(proveedor.id(), contenido);
+        return new InferenceResponse(provider.id(), content);
     }
 }
