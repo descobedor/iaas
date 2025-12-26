@@ -9,7 +9,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 public class TesseractOcrService {
@@ -33,9 +35,30 @@ public class TesseractOcrService {
         }
     }
 
+    public String extractMenuText(byte[] imageBytes) {
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es obligatoria");
+        }
+
+        BufferedImage bufferedImage = readImage(new ByteArrayInputStream(imageBytes));
+        try {
+            return tesseract.doOCR(bufferedImage);
+        } catch (TesseractException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No se pudo extraer texto de la imagen", e);
+        }
+    }
+
     private BufferedImage readImage(MultipartFile image) {
         try {
-            BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+            return readImage(image.getInputStream());
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen", e);
+        }
+    }
+
+    private BufferedImage readImage(InputStream inputStream) {
+        try {
+            BufferedImage bufferedImage = ImageIO.read(inputStream);
             if (bufferedImage == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de imagen no soportado");
             }
