@@ -13,6 +13,7 @@ public class TesseractConfig {
     @PostConstruct
     public void registerImageIoPlugins() {
         ImageIO.scanForPlugins();
+        ImageIO.setUseCache(false);
     }
 
     @Bean

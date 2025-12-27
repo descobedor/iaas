@@ -78,6 +78,10 @@ public class TesseractOcrService {
             }
             Iterator<ImageReader> readers = ImageIO.getImageReaders(imageInputStream);
             if (!readers.hasNext()) {
+                BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(bytes));
+                if (bufferedImage != null) {
+                    return bufferedImage;
+                }
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de imagen no soportado o imagen corrupta");
             }
             ImageReader reader = readers.next();
