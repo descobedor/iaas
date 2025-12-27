@@ -8,10 +8,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 @Service
 public class TesseractOcrService {
@@ -62,11 +65,32 @@ public class TesseractOcrService {
             if (bytes.length == 0) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen está vacía");
             }
-            BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(bytes));
-            if (bufferedImage == null) {
+            return decodeImage(bytes);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen", e);
+        }
+    }
+
+    private BufferedImage decodeImage(byte[] bytes) {
+        try (ImageInputStream imageInputStream = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            if (imageInputStream == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo abrir la imagen");
+            }
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(imageInputStream);
+            if (!readers.hasNext()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de imagen no soportado o imagen corrupta");
             }
-            return bufferedImage;
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(imageInputStream, true, true);
+                BufferedImage bufferedImage = reader.read(0);
+                if (bufferedImage == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de imagen no soportado o imagen corrupta");
+                }
+                return bufferedImage;
+            } finally {
+                reader.dispose();
+            }
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen", e);
         }

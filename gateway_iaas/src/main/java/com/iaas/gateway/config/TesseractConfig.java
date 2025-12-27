@@ -4,8 +4,16 @@ import net.sourceforge.tess4j.Tesseract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
+
 @Configuration
 public class TesseractConfig {
+
+    @PostConstruct
+    public void registerImageIoPlugins() {
+        ImageIO.scanForPlugins();
+    }
 
     @Bean
     public Tesseract tesseract(TesseractProperties properties) {
