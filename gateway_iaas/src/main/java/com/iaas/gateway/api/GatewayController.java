@@ -29,16 +29,16 @@ public class GatewayController {
     @PostMapping("/providers")
     @ResponseStatus(HttpStatus.CREATED)
     public InferenceProvider registerProvider(@Valid @RequestBody RegisterProviderRequest request) {
-        return registry.registrarProveedor(request.nombre(), request.endpoint());
+        return registry.registerProvider(request.name(), request.endpoint());
     }
 
     @GetMapping("/providers")
     public List<InferenceProvider> listProviders() {
-        return registry.listarProveedores();
+        return registry.listProviders();
     }
 
     @PostMapping("/inference")
     public InferenceResponse infer(@Valid @RequestBody InferenceRequest request) {
-        return inferenceService.procesarSolicitud(request);
+        return inferenceService.processRequest(request);
     }
 }
