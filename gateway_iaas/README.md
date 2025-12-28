@@ -15,6 +15,24 @@ mvn spring-boot:run
 
 Esto iniciará el servidor en `http://localhost:8080`.
 
+## Ejecutar con Docker (Tesseract incluido)
+
+El `Dockerfile` instala Tesseract y los datos de idioma en la imagen final para que el OCR funcione sin dependencias locales.
+
+### Build de la imagen
+
+```bash
+docker build -t gateway-iaas .
+```
+
+### Ejecutar el contenedor
+
+```bash
+docker run --rm -p 8080:8080 gateway-iaas
+```
+
+El servicio quedará disponible en `http://localhost:8080`.
+
 ## Endpoints
 
 - `POST /providers`: Registra un proveedor de inferencia.
