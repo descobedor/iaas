@@ -1,11 +1,12 @@
 package com.iaas.gateway.service;
 
-import net.sourceforge.tess4j.Tesseract;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import net.sourceforge.tess4j.Tesseract;
+import com.iaas.gateway.config.TesseractProperties;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,7 +27,7 @@ class TesseractOcrServiceTest {
         when(tesseract.doOCR(any(BufferedImage.class))).thenReturn("menu text");
         ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
         when(provider.getObject()).thenReturn(tesseract);
-        TesseractOcrService service = new TesseractOcrService(provider);
+        TesseractOcrService service = new TesseractOcrService(provider, new TesseractProperties());
 
         byte[] imageBytes = createTestPng();
 
@@ -41,7 +42,7 @@ class TesseractOcrServiceTest {
         when(tesseract.doOCR(any(BufferedImage.class))).thenThrow(new UnsatisfiedLinkError("missing"));
         ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
         when(provider.getObject()).thenReturn(tesseract);
-        TesseractOcrService service = new TesseractOcrService(provider);
+        TesseractOcrService service = new TesseractOcrService(provider, new TesseractProperties());
 
         MockMultipartFile file = new MockMultipartFile("image", "menu.png", "image/png", createTestPng());
 

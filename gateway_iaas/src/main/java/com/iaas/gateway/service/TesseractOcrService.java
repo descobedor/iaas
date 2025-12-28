@@ -1,16 +1,19 @@
 package com.iaas.gateway.service;
 
-import net.sourceforge.tess4j.TesseractException;
-import net.sourceforge.tess4j.Tesseract;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import com.iaas.gateway.config.TesseractProperties;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,9 +24,11 @@ import java.util.Iterator;
 public class TesseractOcrService {
 
     private final ObjectProvider<Tesseract> tesseractProvider;
+    private final TesseractProperties properties;
 
-    public TesseractOcrService(ObjectProvider<Tesseract> tesseractProvider) {
+    public TesseractOcrService(ObjectProvider<Tesseract> tesseractProvider, TesseractProperties properties) {
         this.tesseractProvider = tesseractProvider;
+        this.properties = properties;
     }
 
     public String extractMenuText(MultipartFile image) {
@@ -31,7 +36,7 @@ public class TesseractOcrService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es obligatoria");
         }
 
-        BufferedImage bufferedImage = readImage(image);
+        BufferedImage bufferedImage = preprocess(readImage(image));
         Tesseract tesseract = tesseractProvider.getObject();
         try {
             return tesseract.doOCR(bufferedImage);
@@ -48,7 +53,7 @@ public class TesseractOcrService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es obligatoria");
         }
 
-        BufferedImage bufferedImage = readImage(new ByteArrayInputStream(imageBytes));
+        BufferedImage bufferedImage = preprocess(readImage(new ByteArrayInputStream(imageBytes)));
         Tesseract tesseract = tesseractProvider.getObject();
         try {
             return tesseract.doOCR(bufferedImage);
@@ -107,5 +112,30 @@ public class TesseractOcrService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen", e);
         }
+    }
+
+    private BufferedImage preprocess(BufferedImage input) {
+        if (input == null) {
+            return null;
+        }
+        BufferedImage grayscale = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D grayscaleGraphics = grayscale.createGraphics();
+        grayscaleGraphics.drawImage(input, 0, 0, null);
+        grayscaleGraphics.dispose();
+
+        double scale = properties.getScale() != null ? properties.getScale() : 1.0;
+        if (scale <= 1.0) {
+            return grayscale;
+        }
+        int scaledWidth = Math.max(1, (int) Math.round(grayscale.getWidth() * scale));
+        int scaledHeight = Math.max(1, (int) Math.round(grayscale.getHeight() * scale));
+        BufferedImage scaled = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D scaledGraphics = scaled.createGraphics();
+        scaledGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        scaledGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        scaledGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        scaledGraphics.drawImage(grayscale, 0, 0, scaledWidth, scaledHeight, null);
+        scaledGraphics.dispose();
+        return scaled;
     }
 }

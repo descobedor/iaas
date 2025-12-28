@@ -28,6 +28,15 @@ public class TesseractConfig {
         if (properties.getLanguage() != null && !properties.getLanguage().isBlank()) {
             tesseract.setLanguage(properties.getLanguage());
         }
+        if (properties.getOcrEngineMode() != null) {
+            tesseract.setOcrEngineMode(properties.getOcrEngineMode());
+        }
+        if (properties.getPageSegMode() != null) {
+            tesseract.setPageSegMode(properties.getPageSegMode());
+        }
+        if (properties.getUserDefinedDpi() != null) {
+            tesseract.setTessVariable("user_defined_dpi", properties.getUserDefinedDpi().toString());
+        }
         return tesseract;
     }
 }
