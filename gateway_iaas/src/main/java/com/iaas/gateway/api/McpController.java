@@ -26,7 +26,8 @@ public class McpController {
         this.ocrService = ocrService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, "application/*+json"},
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<JsonRpcResponse> handle(@RequestBody JsonRpcRequest request) {
         if (request == null || request.method() == null) {
             return ResponseEntity.badRequest().body(error(request, -32600, "Invalid Request"));
