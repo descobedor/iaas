@@ -1,7 +1,8 @@
 package com.iaas.gateway.service;
 
-import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import net.sourceforge.tess4j.Tesseract;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,10 +20,10 @@ import java.util.Iterator;
 @Service
 public class TesseractOcrService {
 
-    private final Tesseract tesseract;
+    private final ObjectProvider<Tesseract> tesseractProvider;
 
-    public TesseractOcrService(Tesseract tesseract) {
-        this.tesseract = tesseract;
+    public TesseractOcrService(ObjectProvider<Tesseract> tesseractProvider) {
+        this.tesseractProvider = tesseractProvider;
     }
 
     public String extractMenuText(MultipartFile image) {
@@ -31,6 +32,7 @@ public class TesseractOcrService {
         }
 
         BufferedImage bufferedImage = readImage(image);
+        Tesseract tesseract = tesseractProvider.getObject();
         try {
             return tesseract.doOCR(bufferedImage);
         } catch (UnsatisfiedLinkError e) {
@@ -47,6 +49,7 @@ public class TesseractOcrService {
         }
 
         BufferedImage bufferedImage = readImage(new ByteArrayInputStream(imageBytes));
+        Tesseract tesseract = tesseractProvider.getObject();
         try {
             return tesseract.doOCR(bufferedImage);
         } catch (UnsatisfiedLinkError e) {
