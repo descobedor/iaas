@@ -4,6 +4,20 @@
 
 Además expone una interfaz **Model Context Protocol (MCP)** vía JSON-RPC en `POST /mcp` para listar herramientas (`tools/list`) y ejecutar `extract_menu_text` con imágenes base64.
 
+## Arquitectura
+
+```mermaid
+flowchart LR
+    Client[Cliente/Agente MCP] -->|JSON-RPC tools/list| MCP[MCP Controller]
+    Client -->|JSON-RPC tools/call| MCP
+    Client -->|OCR multipart/base64| OCR[OCR Controller]
+    MCP -->|Base64| OCRService[TesseractOcrService]
+    OCR -->|Imagen| OCRService
+    OCRService -->|OCR| Tesseract[Tesseract (nativo)]
+    MCP -->|Respuesta MCP| Client
+    OCR -->|JSON| Client
+```
+
 ## Requisitos
 
 - Java 17
