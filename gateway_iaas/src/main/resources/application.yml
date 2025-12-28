@@ -3,3 +3,6 @@ server:
 
 app:
   name: gateway_iaas
+  tesseract:
+    data-path:
+    language: spa
