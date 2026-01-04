@@ -6,3 +6,7 @@ app:
   tesseract:
     data-path:
     language: spa
+    ocr-engine-mode: 1
+    page-seg-mode: 6
+    user-defined-dpi: 300
+    scale: 2.0
