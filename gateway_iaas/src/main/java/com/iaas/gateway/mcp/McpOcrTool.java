@@ -30,4 +30,18 @@ public class McpOcrTool {
         }
         return ocrService.extractMenuText(bytes);
     }
+
+    @Tool(name = "extract_menu_structured", description = "Extrae categorías y precios desde un menú en base64.")
+    public com.iaas.gateway.api.MenuStructuredResponse extractMenuStructured(@ToolParam("imageBase64") String imageBase64) {
+        if (imageBase64 == null || imageBase64.isBlank()) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "imageBase64 es obligatorio");
+        }
+        byte[] bytes;
+        try {
+            bytes = Base64.getDecoder().decode(imageBase64);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "imageBase64 no es válido", e);
+        }
+        return ocrService.extractMenuStructured(bytes);
+    }
 }

@@ -65,6 +65,20 @@ class OcrControllerTest {
     }
 
     @Test
+    void extractMenuStructuredAcceptsBase64Json() throws Exception {
+        when(ocrService.extractMenuStructured(org.mockito.ArgumentMatchers.any(byte[].class)))
+                .thenReturn(new MenuStructuredResponse(java.util.List.of(), "raw"));
+
+        String base64 = Base64.getEncoder().encodeToString(createTestPng());
+
+        mockMvc.perform(post("/ocr/menu/structured")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"imageBase64\":\"" + base64 + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rawText").value("raw"));
+    }
+
+    @Test
     void extractMenuRejectsInvalidBase64() throws Exception {
         mockMvc.perform(post("/ocr/menu")
                         .contentType(MediaType.APPLICATION_JSON)

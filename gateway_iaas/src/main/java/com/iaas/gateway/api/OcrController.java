@@ -42,6 +42,23 @@ public class OcrController {
         return new OcrResponse(ocrService.extractMenuText(imageBytes));
     }
 
+    @PostMapping(value = "/menu/structured", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public MenuStructuredResponse extractMenuStructured(@RequestPart(value = "image", required = false) MultipartFile image,
+                                                        MultipartHttpServletRequest request) {
+        MultipartFile resolvedImage = image != null ? image : resolveAnyFile(request);
+        if (resolvedImage == null || resolvedImage.isEmpty()) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "La parte 'image' es obligatoria (ej: -F image=@archivo.jpg)");
+        }
+        return ocrService.extractMenuStructured(resolvedImage);
+    }
+
+    @PostMapping(value = "/menu/structured", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public MenuStructuredResponse extractMenuStructuredBase64(@RequestBody OcrBase64Request request) {
+        byte[] imageBytes = decodeBase64(request);
+        return ocrService.extractMenuStructured(imageBytes);
+    }
+
     private byte[] decodeBase64(OcrBase64Request request) {
         if (request == null || request.imageBase64() == null || request.imageBase64().isBlank()) {
             throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "imageBase64 es obligatorio");

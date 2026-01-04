@@ -44,6 +44,20 @@ class OcrControllerIntegrationTest {
                 .andExpect(jsonPath("$.text").value("menu text"));
     }
 
+    @Test
+    void multipartStructuredOcrFlowReturnsSections() throws Exception {
+        when(ocrService.extractMenuStructured(any(org.springframework.web.multipart.MultipartFile.class)))
+                .thenReturn(new com.iaas.gateway.api.MenuStructuredResponse(java.util.List.of(), "raw"));
+
+        MockMultipartFile file = new MockMultipartFile("image", "menu.png", "image/png", createTestPng());
+
+        mockMvc.perform(multipart("/ocr/menu/structured")
+                        .file(file)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rawText").value("raw"));
+    }
+
     private byte[] createTestPng() throws Exception {
         BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

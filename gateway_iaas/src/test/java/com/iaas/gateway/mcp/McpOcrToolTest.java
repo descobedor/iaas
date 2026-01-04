@@ -29,6 +29,20 @@ class McpOcrToolTest {
     }
 
     @Test
+    void extractMenuStructuredDecodesBase64AndCallsService() {
+        TesseractOcrService service = mock(TesseractOcrService.class);
+        when(service.extractMenuStructured(any(byte[].class))).thenReturn(
+                new com.iaas.gateway.api.MenuStructuredResponse(java.util.List.of(), "raw"));
+        McpOcrTool tool = new McpOcrTool(service);
+
+        String base64 = Base64.getEncoder().encodeToString("image".getBytes());
+
+        com.iaas.gateway.api.MenuStructuredResponse result = tool.extractMenuStructured(base64);
+
+        assertThat(result.rawText()).isEqualTo("raw");
+    }
+
+    @Test
     void extractMenuTextRejectsInvalidBase64() {
         TesseractOcrService service = mock(TesseractOcrService.class);
         McpOcrTool tool = new McpOcrTool(service);

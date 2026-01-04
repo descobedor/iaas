@@ -23,6 +23,9 @@ import java.util.Iterator;
 @Service
 public class TesseractOcrService {
 
+    private static final java.util.regex.Pattern PRICE_PATTERN =
+            java.util.regex.Pattern.compile("(\\d+[\\.,]\\d{2})");
+
     private final ObjectProvider<Tesseract> tesseractProvider;
     private final TesseractProperties properties;
 
@@ -37,15 +40,7 @@ public class TesseractOcrService {
         }
 
         BufferedImage bufferedImage = preprocess(readImage(image));
-        Tesseract tesseract = tesseractProvider.getObject();
-        try {
-            return cleanOcrText(tesseract.doOCR(bufferedImage));
-        } catch (UnsatisfiedLinkError e) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "No se pudo cargar la librería nativa de Tesseract. Instala libtesseract en el sistema.", e);
-        } catch (TesseractException e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No se pudo extraer texto de la imagen", e);
-        }
+        return runOcr(bufferedImage);
     }
 
     public String extractMenuText(byte[] imageBytes) {
@@ -54,6 +49,28 @@ public class TesseractOcrService {
         }
 
         BufferedImage bufferedImage = preprocess(readImage(new ByteArrayInputStream(imageBytes)));
+        return runOcr(bufferedImage);
+    }
+
+    public com.iaas.gateway.api.MenuStructuredResponse extractMenuStructured(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es obligatoria");
+        }
+        BufferedImage bufferedImage = preprocess(readImage(image));
+        String text = runOcr(bufferedImage);
+        return parseMenu(text);
+    }
+
+    public com.iaas.gateway.api.MenuStructuredResponse extractMenuStructured(byte[] imageBytes) {
+        if (imageBytes == null || imageBytes.length == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es obligatoria");
+        }
+        BufferedImage bufferedImage = preprocess(readImage(new ByteArrayInputStream(imageBytes)));
+        String text = runOcr(bufferedImage);
+        return parseMenu(text);
+    }
+
+    private String runOcr(BufferedImage bufferedImage) {
         Tesseract tesseract = tesseractProvider.getObject();
         try {
             return cleanOcrText(tesseract.doOCR(bufferedImage));
@@ -167,5 +184,54 @@ public class TesseractOcrService {
             builder.append(normalized).append('\n');
         }
         return builder.toString().trim();
+    }
+
+    private com.iaas.gateway.api.MenuStructuredResponse parseMenu(String text) {
+        java.util.List<com.iaas.gateway.api.MenuSection> sections = new java.util.ArrayList<>();
+        com.iaas.gateway.api.MenuSection current = null;
+        if (text == null || text.isBlank()) {
+            return new com.iaas.gateway.api.MenuStructuredResponse(sections, text == null ? "" : text);
+        }
+        for (String line : text.split("\\R")) {
+            String normalized = line.replaceAll("\\s+", " ").trim();
+            if (normalized.isBlank()) {
+                continue;
+            }
+            java.util.regex.Matcher matcher = PRICE_PATTERN.matcher(normalized);
+            if (!matcher.find()) {
+                if (isCategory(normalized)) {
+                    current = new com.iaas.gateway.api.MenuSection(normalized, new java.util.ArrayList<>());
+                    sections.add(current);
+                }
+                continue;
+            }
+            if (current == null) {
+                current = new com.iaas.gateway.api.MenuSection("SIN CATEGORÍA", new java.util.ArrayList<>());
+                sections.add(current);
+            }
+            String price = matcher.group(1).replace(',', '.');
+            String name = normalized.substring(0, matcher.start()).replaceAll("[-–—:]+$", "").trim();
+            if (name.isBlank()) {
+                name = normalized;
+            }
+            current.items().add(new com.iaas.gateway.api.MenuItem(name, price));
+        }
+        return new com.iaas.gateway.api.MenuStructuredResponse(sections, text);
+    }
+
+    private boolean isCategory(String line) {
+        if (line.length() < 3) {
+            return false;
+        }
+        boolean hasLetter = false;
+        for (char ch : line.toCharArray()) {
+            if (Character.isLetter(ch)) {
+                hasLetter = true;
+            }
+            if (Character.isLetter(ch) && Character.isLowerCase(ch)) {
+                return false;
+            }
+        }
+        return hasLetter;
     }
 }
