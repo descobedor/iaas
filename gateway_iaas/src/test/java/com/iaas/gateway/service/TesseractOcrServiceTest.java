@@ -54,6 +54,22 @@ class TesseractOcrServiceTest {
                 });
     }
 
+    @Test
+    void extractMenuTextCleansNoisyLines() throws Exception {
+        Tesseract tesseract = mock(Tesseract.class);
+        when(tesseract.doOCR(any(BufferedImage.class))).thenReturn("A\nCOCHINITA PIBIL 13,00\n?\n");
+        ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(tesseract);
+        TesseractProperties properties = new TesseractProperties();
+        properties.setMinLineLength(3);
+        properties.setMinAlnumRatio(0.5);
+        TesseractOcrService service = new TesseractOcrService(provider, properties);
+
+        String result = service.extractMenuText(createTestPng());
+
+        assertThat(result).isEqualTo("COCHINITA PIBIL 13,00");
+    }
+
     private byte[] createTestPng() throws IOException {
         BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

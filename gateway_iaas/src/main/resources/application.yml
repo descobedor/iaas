@@ -10,3 +10,5 @@ app:
     page-seg-mode: 6
     user-defined-dpi: 300
     scale: 2.0
+    min-line-length: 3
+    min-alnum-ratio: 0.4

@@ -39,7 +39,7 @@ public class TesseractOcrService {
         BufferedImage bufferedImage = preprocess(readImage(image));
         Tesseract tesseract = tesseractProvider.getObject();
         try {
-            return tesseract.doOCR(bufferedImage);
+            return cleanOcrText(tesseract.doOCR(bufferedImage));
         } catch (UnsatisfiedLinkError e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "No se pudo cargar la librería nativa de Tesseract. Instala libtesseract en el sistema.", e);
@@ -56,7 +56,7 @@ public class TesseractOcrService {
         BufferedImage bufferedImage = preprocess(readImage(new ByteArrayInputStream(imageBytes)));
         Tesseract tesseract = tesseractProvider.getObject();
         try {
-            return tesseract.doOCR(bufferedImage);
+            return cleanOcrText(tesseract.doOCR(bufferedImage));
         } catch (UnsatisfiedLinkError e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "No se pudo cargar la librería nativa de Tesseract. Instala libtesseract en el sistema.", e);
@@ -137,5 +137,35 @@ public class TesseractOcrService {
         scaledGraphics.drawImage(grayscale, 0, 0, scaledWidth, scaledHeight, null);
         scaledGraphics.dispose();
         return scaled;
+    }
+
+    private String cleanOcrText(String text) {
+        if (text == null) {
+            return null;
+        }
+        int minLength = properties.getMinLineLength() != null ? properties.getMinLineLength() : 0;
+        double minAlnumRatio = properties.getMinAlnumRatio() != null ? properties.getMinAlnumRatio() : 0.0;
+        StringBuilder builder = new StringBuilder();
+        for (String line : text.split("\\R")) {
+            String normalized = line.replaceAll("\\s+", " ").trim();
+            if (normalized.length() < minLength) {
+                continue;
+            }
+            int alnumCount = 0;
+            int totalCount = 0;
+            for (char ch : normalized.toCharArray()) {
+                if (!Character.isWhitespace(ch)) {
+                    totalCount++;
+                }
+                if (Character.isLetterOrDigit(ch)) {
+                    alnumCount++;
+                }
+            }
+            if (totalCount > 0 && ((double) alnumCount / totalCount) < minAlnumRatio) {
+                continue;
+            }
+            builder.append(normalized).append('\n');
+        }
+        return builder.toString().trim();
     }
 }

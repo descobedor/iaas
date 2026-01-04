@@ -11,6 +11,8 @@ public class TesseractProperties {
     private Integer pageSegMode = 6;
     private Integer userDefinedDpi = 300;
     private Double scale = 2.0;
+    private Integer minLineLength = 3;
+    private Double minAlnumRatio = 0.4;
 
     public String getDataPath() {
         return dataPath;
@@ -58,5 +60,21 @@ public class TesseractProperties {
 
     public void setScale(Double scale) {
         this.scale = scale;
+    }
+
+    public Integer getMinLineLength() {
+        return minLineLength;
+    }
+
+    public void setMinLineLength(Integer minLineLength) {
+        this.minLineLength = minLineLength;
+    }
+
+    public Double getMinAlnumRatio() {
+        return minAlnumRatio;
+    }
+
+    public void setMinAlnumRatio(Double minAlnumRatio) {
+        this.minAlnumRatio = minAlnumRatio;
     }
 }
