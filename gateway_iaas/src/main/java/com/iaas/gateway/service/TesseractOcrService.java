@@ -199,8 +199,8 @@ public class TesseractOcrService {
             }
             java.util.regex.Matcher matcher = PRICE_PATTERN.matcher(normalized);
             if (!matcher.find()) {
-                if (isCategory(normalized)) {
-                    String categoryName = cleanMenuLabel(normalized);
+                String categoryName = cleanMenuLabel(normalized);
+                if (isCategory(categoryName)) {
                     current = new com.iaas.gateway.api.MenuSection(categoryName, new java.util.ArrayList<>());
                     sections.add(current);
                 }
@@ -221,15 +221,21 @@ public class TesseractOcrService {
     }
 
     private boolean isCategory(String line) {
-        if (line.length() < 3) {
+        if (line == null) {
             return false;
         }
-        if (PRICE_PATTERN.matcher(line).find()) {
+        String normalized = line.trim();
+        if (normalized.length() < 3) {
+            return false;
+        }
+        if (PRICE_PATTERN.matcher(normalized).find()) {
             return false;
         }
         boolean hasLetter = false;
         int letterCount = 0;
-        for (char ch : line.toCharArray()) {
+        int alnumCount = 0;
+        int totalCount = 0;
+        for (char ch : normalized.toCharArray()) {
             if (Character.isLetter(ch)) {
                 hasLetter = true;
                 letterCount++;
@@ -237,19 +243,30 @@ public class TesseractOcrService {
             if (Character.isLetter(ch) && Character.isLowerCase(ch)) {
                 return false;
             }
+            if (!Character.isWhitespace(ch)) {
+                totalCount++;
+            }
+            if (Character.isLetterOrDigit(ch)) {
+                alnumCount++;
+            }
         }
-        return hasLetter && letterCount >= 3;
+        if (!hasLetter || letterCount < 3) {
+            return false;
+        }
+        return totalCount == 0 || ((double) alnumCount / totalCount) >= 0.6;
     }
 
     private String cleanMenuLabel(String value) {
         if (value == null) {
             return null;
         }
-        String cleaned = value.replaceAll("^[^\\p{Alnum}]+", "")
-                .replaceAll("^[\\p{Alpha}]{1,3}\\s*[-–—]\\s*", "")
-                .replaceAll("^[\\p{Alpha}]{1,3}\\)\\s*[-–—]\\s*", "")
+        String cleaned = value.replaceAll("^\\P{L}+", "")
+                .replaceAll("^(?:[\\p{Alpha}]{1,3}\\s*){1,3}[-–—]\\s*", "")
+                .replaceAll("^(?:[\\p{Alpha}]{1,3}[\\.)]?\\s*){1,3}[-–—]\\s*", "")
+                .replaceAll("^[\\p{Alpha}]{1,3}\\)\\s*[\\p{Alpha}]?\\s*[-–—]\\s*", "")
                 .replaceAll("^\\p{Alpha}\\.?\\s*[-–—]\\s*", "")
                 .replaceAll("^o\\s+", "")
+                .replaceAll("^[^\\p{Alnum}]+", "")
                 .replaceAll("\\s+", " ")
                 .trim();
         return cleaned.isBlank() ? value.trim() : cleaned;

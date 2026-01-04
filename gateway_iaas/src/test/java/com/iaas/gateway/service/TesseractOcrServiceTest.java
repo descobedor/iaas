@@ -78,6 +78,9 @@ class TesseractOcrServiceTest {
                 ma - CAMPECHANO CON QUESO 13,00
                 - QUESOS FUNDIDOS CON
                 ' o TERNERA 13,00
+                5 > o HUITLACOCHE 11,50
+                sl) A - CARNITAS 13,00
+                PF TTS - TINGA DE POLLO 12,00
                 """);
         ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
         when(provider.getObject()).thenReturn(tesseract);
@@ -90,6 +93,9 @@ class TesseractOcrServiceTest {
         assertThat(response.sections().get(0).items().get(0).name()).isEqualTo("CAMPECHANO CON QUESO");
         assertThat(response.sections().get(1).name()).isEqualTo("QUESOS FUNDIDOS CON");
         assertThat(response.sections().get(1).items().get(0).name()).isEqualTo("TERNERA");
+        assertThat(response.sections().get(1).items().get(1).name()).isEqualTo("HUITLACOCHE");
+        assertThat(response.sections().get(1).items().get(2).name()).isEqualTo("CARNITAS");
+        assertThat(response.sections().get(1).items().get(3).name()).isEqualTo("TINGA DE POLLO");
     }
 
     private byte[] createTestPng() throws IOException {
