@@ -200,7 +200,8 @@ public class TesseractOcrService {
             java.util.regex.Matcher matcher = PRICE_PATTERN.matcher(normalized);
             if (!matcher.find()) {
                 if (isCategory(normalized)) {
-                    current = new com.iaas.gateway.api.MenuSection(normalized, new java.util.ArrayList<>());
+                    String categoryName = cleanMenuLabel(normalized);
+                    current = new com.iaas.gateway.api.MenuSection(categoryName, new java.util.ArrayList<>());
                     sections.add(current);
                 }
                 continue;
@@ -214,7 +215,7 @@ public class TesseractOcrService {
             if (name.isBlank()) {
                 name = normalized;
             }
-            current.items().add(new com.iaas.gateway.api.MenuItem(name, price));
+            current.items().add(new com.iaas.gateway.api.MenuItem(cleanMenuLabel(name), price));
         }
         return new com.iaas.gateway.api.MenuStructuredResponse(sections, text);
     }
@@ -223,15 +224,34 @@ public class TesseractOcrService {
         if (line.length() < 3) {
             return false;
         }
+        if (PRICE_PATTERN.matcher(line).find()) {
+            return false;
+        }
         boolean hasLetter = false;
+        int letterCount = 0;
         for (char ch : line.toCharArray()) {
             if (Character.isLetter(ch)) {
                 hasLetter = true;
+                letterCount++;
             }
             if (Character.isLetter(ch) && Character.isLowerCase(ch)) {
                 return false;
             }
         }
-        return hasLetter;
+        return hasLetter && letterCount >= 3;
+    }
+
+    private String cleanMenuLabel(String value) {
+        if (value == null) {
+            return null;
+        }
+        String cleaned = value.replaceAll("^[^\\p{Alnum}]+", "")
+                .replaceAll("^[\\p{Alpha}]{1,3}\\s*[-–—]\\s*", "")
+                .replaceAll("^[\\p{Alpha}]{1,3}\\)\\s*[-–—]\\s*", "")
+                .replaceAll("^\\p{Alpha}\\.?\\s*[-–—]\\s*", "")
+                .replaceAll("^o\\s+", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+        return cleaned.isBlank() ? value.trim() : cleaned;
     }
 }

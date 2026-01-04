@@ -70,6 +70,28 @@ class TesseractOcrServiceTest {
         assertThat(result).isEqualTo("COCHINITA PIBIL 13,00");
     }
 
+    @Test
+    void extractMenuStructuredCleansNames() throws Exception {
+        Tesseract tesseract = mock(Tesseract.class);
+        when(tesseract.doOCR(any(BufferedImage.class))).thenReturn("""
+                TEQUILA Y SAL
+                ma - CAMPECHANO CON QUESO 13,00
+                - QUESOS FUNDIDOS CON
+                ' o TERNERA 13,00
+                """);
+        ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(tesseract);
+        TesseractOcrService service = new TesseractOcrService(provider, new TesseractProperties());
+
+        com.iaas.gateway.api.MenuStructuredResponse response = service.extractMenuStructured(createTestPng());
+
+        assertThat(response.sections()).hasSize(2);
+        assertThat(response.sections().get(0).name()).isEqualTo("TEQUILA Y SAL");
+        assertThat(response.sections().get(0).items().get(0).name()).isEqualTo("CAMPECHANO CON QUESO");
+        assertThat(response.sections().get(1).name()).isEqualTo("QUESOS FUNDIDOS CON");
+        assertThat(response.sections().get(1).items().get(0).name()).isEqualTo("TERNERA");
+    }
+
     private byte[] createTestPng() throws IOException {
         BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
