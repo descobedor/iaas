@@ -189,6 +189,8 @@ public class TesseractOcrService {
     private com.iaas.gateway.api.MenuStructuredResponse parseMenu(String text) {
         java.util.List<com.iaas.gateway.api.MenuSection> sections = new java.util.ArrayList<>();
         com.iaas.gateway.api.MenuSection current = null;
+        int sectionIndex = 0;
+        int itemIndex = 0;
         if (text == null || text.isBlank()) {
             return new com.iaas.gateway.api.MenuStructuredResponse(sections, text == null ? "" : text);
         }
@@ -201,21 +203,23 @@ public class TesseractOcrService {
             if (!matcher.find()) {
                 String categoryName = cleanMenuLabel(normalized);
                 if (isCategory(categoryName)) {
-                    current = new com.iaas.gateway.api.MenuSection(categoryName, new java.util.ArrayList<>());
+                    current = new com.iaas.gateway.api.MenuSection(sectionIndex++, categoryName, new java.util.ArrayList<>());
                     sections.add(current);
+                    itemIndex = 0;
                 }
                 continue;
             }
             if (current == null) {
-                current = new com.iaas.gateway.api.MenuSection("SIN CATEGORÍA", new java.util.ArrayList<>());
+                current = new com.iaas.gateway.api.MenuSection(sectionIndex++, "SIN CATEGORÍA", new java.util.ArrayList<>());
                 sections.add(current);
+                itemIndex = 0;
             }
             String price = matcher.group(1).replace(',', '.');
             String name = normalized.substring(0, matcher.start()).replaceAll("[-–—:]+$", "").trim();
             if (name.isBlank()) {
                 name = normalized;
             }
-            current.items().add(new com.iaas.gateway.api.MenuItem(cleanMenuLabel(name), price));
+            current.items().add(new com.iaas.gateway.api.MenuItem(itemIndex++, cleanMenuLabel(name), price));
         }
         return new com.iaas.gateway.api.MenuStructuredResponse(sections, text);
     }

@@ -1,4 +1,4 @@
 package com.iaas.gateway.api;
 
-public record MenuItem(String name, String price) {
+public record MenuItem(int index, String name, String price) {
 }
