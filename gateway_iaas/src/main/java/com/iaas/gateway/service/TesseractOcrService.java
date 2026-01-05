@@ -181,7 +181,7 @@ public class TesseractOcrService {
             if (totalCount > 0 && ((double) alnumCount / totalCount) < minAlnumRatio) {
                 continue;
             }
-            String preserved = line.replaceAll("[\\t ]+$", "");
+            String preserved = line.replaceAll(" +$", "");
             builder.append(preserved).append('\n');
         }
         return builder.toString().trim();
