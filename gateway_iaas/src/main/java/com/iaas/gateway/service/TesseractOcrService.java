@@ -277,13 +277,13 @@ public class TesseractOcrService {
         if (value == null) {
             return null;
         }
-        String cleaned = value.replaceAll("^\\P{L}+", "")
-                .replaceAll("^(?:[\\p{Alpha}]{1,3}\\s*){1,3}[-–—]\\s*", "")
-                .replaceAll("^(?:[\\p{Alpha}]{1,3}[\\.)]?\\s*){1,3}[-–—]\\s*", "")
-                .replaceAll("^[\\p{Alpha}]{1,3}\\)\\s*[\\p{Alpha}]?\\s*[-–—]\\s*", "")
-                .replaceAll("^\\p{Alpha}\\.?\\s*[-–—]\\s*", "")
-                .replaceAll("^o\\s+", "")
-                .replaceAll("^[^\\p{Alnum}]+", "")
+        String cleaned = value.trim()
+                .replaceAll("^['\"`]+\\s*", "")
+                .replaceAll("^\\d+\\s*>\\s*", "")
+                .replaceAll("^[\\p{Alpha}]{1,3}\\s*[-–—]\\s*", "- ")
+                .replaceAll("^(?:[\\p{Alpha}]{1,3}\\)\\s*){1,2}[\\p{Alpha}]?\\s*[-–—]\\s*", "- ")
+                .replaceAll("^(?:[\\p{Alpha}]{1,4}\\s+){1,3}[-–—]\\s*", "- ")
+                .replaceAll("^[^\\p{Alnum}-]+", "")
                 .replaceAll("\\s+", " ")
                 .trim();
         return cleaned.isBlank() ? value.trim() : cleaned;
