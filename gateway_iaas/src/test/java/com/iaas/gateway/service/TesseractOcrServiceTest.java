@@ -92,17 +92,17 @@ class TesseractOcrServiceTest {
         assertThat(response.sections().get(0).index()).isZero();
         assertThat(response.sections().get(0).name()).isEqualTo("TEQUILA Y SAL");
         assertThat(response.sections().get(0).items().get(0).index()).isZero();
-        assertThat(response.sections().get(0).items().get(0).name()).isEqualTo("- CAMPECHANO CON QUESO");
+        assertThat(response.sections().get(0).items().get(0).name()).isEqualTo("CAMPECHANO CON QUESO");
         assertThat(response.sections().get(1).index()).isEqualTo(1);
-        assertThat(response.sections().get(1).name()).isEqualTo("- QUESOS FUNDIDOS CON");
+        assertThat(response.sections().get(1).name()).isEqualTo("QUESOS FUNDIDOS CON");
         assertThat(response.sections().get(1).items().get(0).index()).isZero();
-        assertThat(response.sections().get(1).items().get(0).name()).isEqualTo("o TERNERA");
+        assertThat(response.sections().get(1).items().get(0).name()).isEqualTo("TERNERA");
         assertThat(response.sections().get(1).items().get(1).index()).isEqualTo(1);
-        assertThat(response.sections().get(1).items().get(1).name()).isEqualTo("o HUITLACOCHE");
+        assertThat(response.sections().get(1).items().get(1).name()).isEqualTo("HUITLACOCHE");
         assertThat(response.sections().get(1).items().get(2).index()).isEqualTo(2);
-        assertThat(response.sections().get(1).items().get(2).name()).isEqualTo("- CARNITAS");
+        assertThat(response.sections().get(1).items().get(2).name()).isEqualTo("CARNITAS");
         assertThat(response.sections().get(1).items().get(3).index()).isEqualTo(3);
-        assertThat(response.sections().get(1).items().get(3).name()).isEqualTo("- TINGA DE POLLO");
+        assertThat(response.sections().get(1).items().get(3).name()).isEqualTo("TINGA DE POLLO");
     }
 
     @Test
