@@ -105,6 +105,22 @@ class TesseractOcrServiceTest {
         assertThat(response.sections().get(1).items().get(3).name()).isEqualTo("TINGA DE POLLO");
     }
 
+    @Test
+    void extractMenuStructuredConvertsSpacesToTabsInRawText() throws Exception {
+        Tesseract tesseract = mock(Tesseract.class);
+        when(tesseract.doOCR(any(BufferedImage.class))).thenReturn("""
+                TEQUILA  Y SAL
+                ITEM  12,00
+                """);
+        ObjectProvider<Tesseract> provider = mock(ObjectProvider.class);
+        when(provider.getObject()).thenReturn(tesseract);
+        TesseractOcrService service = new TesseractOcrService(provider, new TesseractProperties());
+
+        com.iaas.gateway.api.MenuStructuredResponse response = service.extractMenuStructured(createTestPng());
+
+        assertThat(response.rawText()).isEqualTo("TEQUILA\tY SAL\nITEM\t12,00");
+    }
+
     private byte[] createTestPng() throws IOException {
         BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

@@ -193,7 +193,7 @@ public class TesseractOcrService {
         int sectionIndex = 0;
         int itemIndex = 0;
         if (text == null || text.isBlank()) {
-            return new com.iaas.gateway.api.MenuStructuredResponse(sections, text == null ? "" : text);
+            return new com.iaas.gateway.api.MenuStructuredResponse(sections, toTsvTabs(text));
         }
         for (String line : text.split("\\R")) {
             String normalized = line.replaceAll("\\s+", " ").trim();
@@ -222,7 +222,19 @@ public class TesseractOcrService {
             }
             current.items().add(new com.iaas.gateway.api.MenuItem(itemIndex++, cleanMenuLabel(name), price));
         }
-        return new com.iaas.gateway.api.MenuStructuredResponse(sections, text);
+        return new com.iaas.gateway.api.MenuStructuredResponse(sections, toTsvTabs(text));
+    }
+
+    private String toTsvTabs(String text) {
+        if (text == null || text.isBlank()) {
+            return text == null ? "" : text;
+        }
+        StringBuilder builder = new StringBuilder();
+        for (String line : text.split("\\R", -1)) {
+            String tsvLine = line.contains("\t") ? line : line.replaceAll(" {2,}", "\t");
+            builder.append(tsvLine).append('\n');
+        }
+        return builder.toString().trim();
     }
 
     private boolean isCategory(String line) {
